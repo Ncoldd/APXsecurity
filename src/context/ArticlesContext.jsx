@@ -1,41 +1,56 @@
 import React, { createContext, useContext, useState } from 'react';
+import { useAuth } from './AuthContext'; // <-- import to access user info
 
 // ⚠️ SECURITY ISSUE: This context is shared globally with no user authentication
 // All users see the same saved articles!
 const ArticlesContext = createContext();
 
 export function ArticlesProvider({ children }) {
-  const [savedArticles, setSavedArticles] = useState([]);
+  const [savedArticlesByUser, setSavedArticlesByUser] = useState({});
+
+  const getAllUserArticles = () => savedArticlesByUser;
+
+  const { user } = useAuth();
 
   const saveArticle = (article) => {
-    setSavedArticles(prev => {
-      // Check if article is already saved
-      if (prev.find(a => a.url === article.url)) {
-        return prev;
-      }
-      return [...prev, article];
-    });
-  };
+  if (!user) return; // safety check
+  setSavedArticlesByUser(prev => ({
+    ...prev,
+    [user.username]: [...(prev[user.username] || []), article]
+  }));
+};
 
   const removeArticle = (url) => {
-    setSavedArticles(prev => prev.filter(a => a.url !== url));
-  };
+    if (!user) return;
+    setSavedArticlesByUser(prev => ({
+      ...prev,
+      [user.username]: (prev[user.username] || []).filter(a => a.url !== url)
+  }));
+};
 
   const isArticleSaved = (url) => {
-    return savedArticles.some(a => a.url === url);
-  };
+  if (!user) return false;
+  return (savedArticlesByUser[user.username] || []).some(a => a.url === url);
+};
+
+  const getUserSavedArticles = (user) => {
+  if (!user || !user.username) return [];
+  return savedArticlesByUser[user.username] || [];
+};
 
   return (
-    <ArticlesContext.Provider 
-      value={{ 
-        savedArticles, 
-        saveArticle, 
-        removeArticle, 
-        isArticleSaved 
-      }}
-    >
-      {children}
-    </ArticlesContext.Provider>
+<ArticlesContext.Provider
+  value={{
+    saveArticle,
+    removeArticle,
+    isArticleSaved,
+    getUserSavedArticles,
+    getAllUserArticles,
+    savedArticlesByUser, 
+  }}
+>
+  {children}
+</ArticlesContext.Provider>
   );
 };
 

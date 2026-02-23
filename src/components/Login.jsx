@@ -82,7 +82,8 @@ function Login() {
 
         <div className="demo-accounts">
           <p className="demo-title">Demo Accounts (for testing):</p>
-          <p>Any username/password combination will work</p>
+          <p> Admin account - username: admin, password: admin</p>
+          <p> Regular account - username: user, password: user123</p>
           <p>Select "Regular" or "Premium" to test different access levels</p>
         </div>
       </div>
